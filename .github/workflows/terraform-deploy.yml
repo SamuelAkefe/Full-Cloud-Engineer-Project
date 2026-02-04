@@ -18,7 +18,18 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
-            # 2. Configure AWS Credentials
+            # 2. Run Security Scan (Trivy)
+            # This checks your .tf files for misconfigurations (like public buckets)
+            # It will stop the pipeline if it finds CRITICAL or HIGH severity issues.
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@master
+              with:
+                scan-type: 'config'
+                scan-ref: '.'
+                exit-code: '1'
+                severity: 'CRITICAL, HIGH'
+
+            # 3. Configure AWS Credentials
             # This reads your Repository Secrets and creates a secure file for Terraform
             - name: Configure AWS Credentials
               uses: aws-actions/configure-aws-credentials@v4
@@ -27,29 +38,28 @@ jobs:
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws-region: ${{ vars.AWS_REGION }}
           
-            # 2. Install Terraform
+            # 4. Install Terraform
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v3
               with:
                 terraform_version: "1.9.0" # Pin to a stable version
 
-            # 3. Check formatting (Best Practice)
+            # 5. Check formatting (Best Practice)
             - name: Terraform Format
               run: terraform fmt -check
 
-            # 4. Initialize (Download Providers + Backend)
+            # 6. Initialize (Download Providers + Backend)
             - name: Terraform Init
               run: terraform init
 
-            # 5. Plan (Show what will change)
+            # 7. Plan (Show what will change)
             # We verify the plan on Pull Requests and pushes
             - name: Terraform Plan
               id: plan
               run: terraform plan -no-color
               continue-on-error: true
 
-
-            # 6. Apply (Only on push to main)
+            # 8. Apply (Only on push to main)
             - name: Terraform Apply
               if: github.ref == 'refs/heads/main' && github.event_name == 'push'
               run: terraform apply -auto-approve
