@@ -1,0 +1,51 @@
+name: "Terraform Infrastructure Deployment"
+
+on: 
+    push:
+        branches:
+            - main
+    pull_request:
+        
+permissions:
+    contents: read
+
+jobs: 
+    terraform:
+        name: "Terraform"
+        runs-on: ubuntu-latest
+        env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_aCCESS_KEY }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
+
+        steps:
+            # 1. Checkout the code
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            # 2. Install Terraform
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+
+            # 3. Check formatting (Best Practice)
+            - name: Terraform Format
+              run: terraform fmt -check
+
+            # 4. Initialize (Download Providers + Backend)
+            - name: Terraform Init
+              run: terraform init
+
+            # 5. Plan (Show what will change)
+            # We verify the plan on Pull Requests and pushes
+            - name: Terraform Plan
+              id: plan
+              run: terraform plan -no-color
+              continue-on-error: true
+
+
+            # 6. Apply (Only on push to main)
+            - name: Terraform Apply
+              if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+              run: terraform apply -auto-approve
+
+
