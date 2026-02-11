@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloud User Manager</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .user-card { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
+        img { max-width: 150px; display: block; margin-top: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>User Registry (Powered by RDS & S3)</h1>
+    
+    <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h3>Add New User</h3>
+        <form action="/add" method="POST" enctype="multipart/form-data">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <br><br>
+            <label>Profile Picture:</label>
+            <input type="file" name="image" accept="image/*">
+            <br><br>
+            <button type="submit">Add User</button>
+        </form>
+    </div>
+
+    <hr>
+
+    <h2>Registered Users</h2>
+    {% for user in users %}
+        <div class="user-card">
+            <strong>{{ user.username }}</strong> <small>({{ user.email }})</small>
+            
+            {% if user.image_url %}
+                <img src="{{ user.image_url }}" alt="User Image">
+            {% else %}
+                <p><em>No image uploaded</em></p>
+            {% endif %}
+        </div>
+    {% else %}
+        <p>No users found. Add one above!</p>
+    {% endfor %}
+</body>
+</html>

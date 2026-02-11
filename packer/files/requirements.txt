@@ -1,0 +1,5 @@
+flask
+gunicorn
+boto3
+psycopg2-binary
+flask-sqlalchemy
