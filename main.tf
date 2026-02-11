@@ -283,7 +283,7 @@ data "aws_ami" "amazon_linux" {
 }
 
 resource "aws_instance" "public_server" {
-  ami           = data.aws_ami.amazon_linux.id
+  ami           = "ami-075943ca530190a76"
   instance_type = "t2.micro"
 
   # Place it in the Public Subnet (from the previous article context)
@@ -308,17 +308,35 @@ resource "aws_instance" "public_server" {
   # IAM_instance_profile 
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
 
-  # Install Nginx on startup
+  # Instead of installing software (which is already done), this script connects the app to RDS and S3.
   user_data = <<-EOF
 #!/bin/bash
-sudo yum update -y
-sudo amazon-linux-extras install nginx1 -y
-sudo systemctl start nginx
-sudo systemctl enable nginx
+
+# Create a systemd override Directory
+mkdir -p /etc/systemd/system/myflaskapp.service.d
+
+# Write the Database & S3 details into a config file
+cat <<EOT > /etc/systemd/system/myflaskapp.service.d/override.conf
+    [Service]
+    Environment="RDS_ENDPOINT=${aws_db_instance.postgres.endpoint}"
+    Environment="DB_USER=${var.db_username}"
+    Environment="DB_PASSWORD=${var.db_password}"
+    Environment="S3_BUCKET_NAME=${aws_s3_bucket.uploads.bucket}"
+EOT
+# Reload systemd to read the new config
+systemctl daemon-reload
+
+# Restart the app so it connects to the database
+systemctl restart myflaskapp
 EOF
 
   tags = {
     Name = "${var.project_name}-ec2"
+  }
+
+  # Prevent Terraform from destroying the instance if the script changes slightly
+  lifecycle {
+    ignore_changes = [user_data, tags]
   }
 }
 
