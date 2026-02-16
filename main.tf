@@ -317,11 +317,11 @@ mkdir -p /etc/systemd/system/myflaskapp.service.d
 
 # Write the Database & S3 details into a config file
 cat <<EOT > /etc/systemd/system/myflaskapp.service.d/override.conf
-    [Service]
-    Environment="RDS_ENDPOINT=${aws_db_instance.postgres.endpoint}"
-    Environment="DB_USER=${var.db_username}"
-    Environment="DB_PASSWORD=${var.db_password}"
-    Environment="S3_BUCKET_NAME=${aws_s3_bucket.uploads.bucket}"
+[Service]
+Environment="RDS_ENDPOINT=${aws_db_instance.postgres.endpoint}"
+Environment="DB_USER=${var.db_username}"
+Environment="DB_PASSWORD=${var.db_password}"
+Environment="S3_BUCKET_NAME=${aws_s3_bucket.uploads.bucket}"
 EOT
 # Reload systemd to read the new config
 systemctl daemon-reload
