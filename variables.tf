@@ -45,5 +45,5 @@ variable "db_password" {
   description = "Database master password"
   type        = string
   sensitive   = true
-  default     = "admin1234"
+  default     = "admin12345!!"
 }
